@@ -1,0 +1,597 @@
+:sectnums!:
+
+[appendix]
+[[_field_mappings]]
+= Flow Definition Language 1.0 to 2.0 Mappings
+
+The flow definition language has changed since the 1.0 release.
+This is a listing of the language elements in the 1.0 release, and how they map to elements in the 2.0 release.
+While most of the changes are semantic, there are a few structural changes.
+Please see the upgrade guide for more details about changes between Web Flow 1.0 and 2.0. 
+
+.Mappings
+[cols="1,1,1,1,1", options="header"]
+|===
+| 
+						SWF 1.0
+					
+| 
+						SWF 2.0
+					
+| 
+						Comments
+					
+
+|__action__
+|__\*__
+|
+						use <evaluate />
+
+|
+						bean
+|
+						*
+
+|
+						name
+|
+						*
+
+|
+						method
+|
+						*
+
+|__action-state__
+|__action-state__
+
+|
+						id
+|
+						id
+
+|
+						*
+|
+						parent
+
+|__argument__
+|__\*__
+|
+						use <evaluate expression="func(arg1, arg2, ...)"/>
+
+|
+						expression
+
+|
+						parameter-type
+
+|__attribute__
+|__attribute__
+
+|
+						name
+|
+						name
+
+|
+						type
+|
+						type
+
+|
+						value
+|
+						value
+
+|__attribute-mapper__
+|__\*__
+|
+						input and output elements can be in flows or subflows directly
+
+|
+						bean
+|
+						*
+|
+						now subflow-attribute-mapper attribute on subflow-state
+
+|__bean-action__
+|__\*__
+|
+						use <evaluate />
+
+|
+						bean
+|
+						*
+
+|
+						name
+|
+						*
+
+|
+						method
+|
+						*
+
+|__decision-state__
+|__decision-state__
+
+|
+						id
+|
+						id
+
+|
+						*
+|
+						parent
+
+|__end-actions__
+|__on-end__
+
+|__end-state__
+|__end-state__
+
+|
+						id
+|
+						id
+
+|
+						view
+|
+						view
+
+|
+						*
+|
+						parent
+
+|
+						*
+|
+						commit
+
+|__entry-actions__
+|__on-entry__
+
+|__evaluate-action__
+|__evaluate__
+
+|
+						expression
+|
+						expression
+
+|
+						name
+|
+						*
+|
+						use <evaluate ...> <attribute name=`"name`" value="..." /> </evaluate>
+
+|
+						*
+|
+						result
+
+|
+						*
+|
+						result-type
+
+|__evaluation-result__
+|__\*__
+|
+						use <evaluate result="..." />
+
+|
+						name
+|
+						*
+
+|
+						scope
+|
+						*
+
+|__exception-handler__
+|__exception-handler__
+
+|
+						bean
+|
+						bean
+
+|__exit-actions__
+|__on-exit__
+
+|__flow__
+|__flow__
+
+|
+						*
+|
+						start-state
+
+|
+						*
+|
+						parent
+
+|
+						*
+|
+						abstract
+
+|__global-transitions__
+|__global-transitions__
+
+|__if__
+|__if__
+
+|
+						test
+|
+						test
+
+|
+						then
+|
+						then
+
+|
+						else
+|
+						else
+
+|__import__
+|__bean-import__
+
+|
+						resource
+|
+						resource
+
+|__inline-flow__
+|__\*__
+|
+						convert to new top-level flow
+
+|
+						id
+|
+						*
+
+|__input-attribute__
+|__input__
+
+|
+						name
+|
+						name
+
+|
+						scope
+|
+						*
+|
+						prefix name with scope <input name="flowScope.foo" />
+
+|
+						required
+|
+						required
+
+|
+						*
+|
+						type
+
+|
+						*
+|
+						value
+
+|__input-mapper__
+|__\*__
+|
+						inputs can be in flows and subflows directly
+
+|__mapping__
+|__input or output__
+
+|
+						source
+|
+						name or value
+|
+						name when in flow element, value when in subflow-state element
+
+|
+						target
+|
+						name or value
+|
+						value when in flow element, name when in subflow-state element
+
+|
+						target-collection
+|
+						*
+|
+						no longer supported
+
+|
+						from
+|
+						*
+|
+						detected automatically
+
+|
+						to
+|
+						type
+
+|
+						required
+|
+						required
+
+|__method-argument__
+|__\*__
+|
+						use <evaluate expression="func(arg1, arg2, ...)"/>
+
+|__method-result__
+|__\*__
+|
+						use <evaluate result="..." />
+
+|
+						name
+|
+						*
+
+|
+						scope
+|
+						*
+
+|__output-attribute__
+|__output__
+
+|
+						name
+|
+						name
+
+|
+						scope
+|
+						*
+|
+						prefix name with scope <output name="flowScope.foo" />
+
+|
+						required
+|
+						required
+
+|
+						*
+|
+						type
+
+|
+						*
+|
+						value
+
+|__output-mapper__
+|__\*__
+|
+						output can be in flows and subflows directly
+
+|__render-actions__
+|__on-render__
+
+|__set__
+|__set__
+
+|
+						attribute
+|
+						name
+
+|
+						scope
+|
+						*
+|
+						prefix name with scope <set name="flowScope.foo" />
+
+|
+						value
+|
+						value
+
+|
+						name
+|
+						*
+|
+						use <set ...> <attribute name=`"name`" value="..." /> </set>
+
+|
+						*
+|
+						type
+
+|__start-actions__
+|__on-start__
+
+|__start-state__
+|__\*__
+|
+						now <flow start-state="...">, or defaults to the first state in the flow
+
+|
+						idref
+|
+						*
+
+|__subflow-state__
+|__subflow-state__
+
+|
+						id
+|
+						id
+
+|
+						flow
+|
+						subflow
+
+|
+						*
+|
+						parent
+
+|
+						*
+|
+						subflow-attribute-mapper
+
+|__transition__
+|__transition__
+
+|
+						on
+|
+						on
+
+|
+						on-exception
+|
+						on-exception
+
+|
+						to
+|
+						to
+
+|
+						*
+|
+						bind
+
+|
+						*
+|
+						validate
+
+|
+						*
+|
+						history
+
+|__value__
+|__value__
+
+|__var__
+|__var__
+
+|
+						name
+|
+						name
+
+|
+						class
+|
+						class
+
+|
+						scope
+|
+						*
+|
+						always flow scope
+
+|
+						bean
+|
+						*
+|
+						all Spring beans can be resolved with EL
+
+|__view-state__
+|__view-state__
+
+|
+						id
+|
+						id
+
+|
+						view
+|
+						view
+
+|
+						*
+|
+						parent
+
+|
+						*
+|
+						redirect
+
+|
+						*
+|
+						popup
+
+|
+						*
+|
+						model
+
+|
+						*
+|
+						history
+
+|__\*__
+|__persistence-context__
+
+|__\*__
+|__render__
+
+|
+						*
+|
+						fragments
+
+|__\*__
+|__secured__
+
+|
+						*
+|
+						attributes
+
+|
+						*
+|
+						match
+|===
+
+:sectnums:

@@ -1,0 +1,554 @@
+= System Setup
+:doctype: book
+:sectnums:
+:toc: left
+:icons: font
+:experimental:
+:sourcedir: .
+
+[[_system_setup_introduction]]
+== Introduction
+
+This chapter shows you how to setup the Web Flow system for use in any web environment. 
+
+[[_system_config_options]]
+== Java Config and XML Namespace
+
+Web Flow provides dedicated configuration support for both Java and XML-based configuration. 
+
+To get started with XML based configuration declare the webflow config XML namespace: 
+
+[source,xml]
+----
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:webflow="http://www.springframework.org/schema/webflow-config"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           https://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/webflow-config
+           https://www.springframework.org/schema/webflow-config/spring-webflow-config.xsd">
+
+    <!-- Setup Web Flow here -->
+
+</beans>
+----
+
+To get started with Java configuration extend [class]``AbstractFlowConfiguration`` in an [class]``@Configuration`` class: 
+
+[source,java]
+----
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.webflow.config.AbstractFlowConfiguration;
+
+@Configuration
+public class WebFlowConfig extends AbstractFlowConfiguration {
+
+}
+----
+
+[[_system_config_basic]]
+== Basic system configuration
+
+The next section shows the minimal configuration required to set up the Web Flow system in your application. 
+
+[[_basic_setup_flow_registry]]
+=== FlowRegistry
+
+Register your flows in a `FlowRegistry` in XML: 
+
+[source,xml]
+----
+
+<webflow:flow-registry id="flowRegistry">
+    <webflow:flow-location path="/WEB-INF/flows/booking/booking.xml" />
+</webflow:flow-registry>
+----
+
+Register your flows in a `FlowRegistry` in Java: 
+
+[source,java]
+----
+
+@Bean
+public FlowDefinitionRegistry flowRegistry() {
+    return getFlowDefinitionRegistryBuilder()
+        .addFlowLocation("/WEB-INF/flows/booking/booking.xml")
+        .build();
+}
+----
+
+[[_basic_setup_flow_executor]]
+=== FlowExecutor
+
+Deploy a FlowExecutor, the central service for executing flows in XML: 
+
+[source,xml]
+----
+
+<webflow:flow-executor id="flowExecutor" />
+----
+
+Deploy a FlowExecutor, the central service for executing flows in Java: 
+
+[source,java]
+----
+
+@Bean
+public FlowExecutor flowExecutor() {
+    return getFlowExecutorBuilder(flowRegistry()).build();
+}
+----
+
+See the Spring MVC and Spring Faces sections of this guide on how to integrate the Web Flow system with the MVC and JSF environment, respectively. 
+
+[[_flow_registry]]
+== flow-registry options
+
+This section explores flow-registry configuration options. 
+
+[[_flow_registry_location]]
+=== Specifying flow locations
+
+Use the `location` element to specify paths to flow definitions to register.
+By default, flows will be assigned registry identifiers equal to their filenames minus the file extension, unless a registry bath path is defined. 
+
+In XML: 
+
+[source,xml]
+----
+
+<webflow:flow-location path="/WEB-INF/flows/booking/booking.xml" />
+----
+
+In Java: 
+
+[source,java]
+----
+
+return getFlowDefinitionRegistryBuilder()
+        .addFlowLocation("/WEB-INF/flows/booking/booking.xml")
+        .build();
+----
+
+[[_flow_registry_location_id]]
+=== Assigning custom flow identifiers
+
+Specify an id to assign a custom registry identifier to a flow in XML: 
+
+[source,xml]
+----
+
+<webflow:flow-location path="/WEB-INF/flows/booking/booking.xml" id="bookHotel" />
+----
+
+Specify an id to assign a custom registry identifier to a flow in Java: 
+
+[source,java]
+----
+
+return getFlowDefinitionRegistryBuilder()
+        .addFlowLocation("/WEB-INF/flows/booking/booking.xml", "bookHotel")
+        .build();
+----
+
+[[_flow_registry_location_attributes]]
+=== Assigning flow meta-attributes
+
+Use the `flow-definition-attributes` element to assign custom meta-attributes to a registered flow. 
+
+In XML: 
+
+[source,xml]
+----
+
+<webflow:flow-location path="/WEB-INF/flows/booking/booking.xml">
+    <webflow:flow-definition-attributes>
+        <webflow:attribute name="caption" value="Books a hotel" />
+    </webflow:flow-definition-attributes>
+</webflow:flow-location>
+----
+
+In Java: 
+
+[source,java]
+----
+
+Map<String, Object> attrs = ... ;
+
+return getFlowDefinitionRegistryBuilder()
+        .addFlowLocation("/WEB-INF/flows/booking/booking.xml", null, attrs)
+        .build();
+----
+
+[[_flow_registry_patterns]]
+=== Registering flows using a location pattern
+
+Use the `flow-location-patterns` element to register flows that match a specific resource location pattern: 
+
+In XML: 
+
+[source,xml]
+----
+
+<webflow:flow-location-pattern value="/WEB-INF/flows/**/*-flow.xml" />
+----
+
+In Java: 
+
+[source,java]
+----
+
+return getFlowDefinitionRegistryBuilder()
+        .addFlowLocationPattern("/WEB-INF/flows/**/*-flow.xml")
+        .build();
+----
+
+[[_flow_registry_base_path]]
+=== Flow location base path
+
+Use the `base-path` attribute to define a base location for all flows in the application.
+All flow locations are then relative to the base path.
+The base path can be a resource path such as '/WEB-INF' or a location on the classpath like 'classpath:org/springframework/webflow/samples'. 
+
+In XML: 
+
+[source,xml]
+----
+
+<webflow:flow-registry id="flowRegistry" base-path="/WEB-INF">
+    <webflow:flow-location path="/hotels/booking/booking.xml" />
+</webflow:flow-registry>
+----
+
+In Java: 
+
+[source,java]
+----
+
+return getFlowDefinitionRegistryBuilder()
+        .setBasePath("/WEB-INF")
+        .addFlowLocationPattern("/hotels/booking/booking.xml")
+        .build();
+----
+
+With a base path defined, the algorithm that assigns flow identifiers changes slightly.
+Flows will now be assigned registry identifiers equal to the the path segment between their base path and file name.
+For example, if a flow definition is located at '/WEB-INF/hotels/booking/booking-flow.xml' and the base path is '/WEB-INF' the remaining path to this flow is 'hotels/booking' which becomes the flow id. 
+
+.Directory per flow definition
+[TIP]
+====
+Recall it is a best practice to package each flow definition in a unique directory.
+This improves modularity, allowing dependent resources to be packaged with the flow definition.
+It also prevents two flows from having the same identifiers when using the convention. 
+====
+
+If no base path is not specified or if the flow definition is directly on the base path, flow id assignment from the filename (minus the extension) is used.
+For example, if a flow definition file is 'booking.xml', the flow identifier is simply 'booking'. 
+
+Location patterns are particularly powerful when combined with a registry base path.
+Instead of the flow identifiers becoming '*-flow', they will be based on the directory path.
+For example in XML: 
+
+[source,xml]
+----
+
+<webflow:flow-registry id="flowRegistry" base-path="/WEB-INF">
+    <webflow:flow-location-pattern value="/**/*-flow.xml" />
+</webflow:flow-registry>
+----
+
+In Java: 
+
+[source,java]
+----
+
+return getFlowDefinitionRegistryBuilder()
+        .setBasePath("/WEB-INF")
+        .addFlowLocationPattern("/**/*-flow.xml")
+        .build();
+----
+
+In the above example, suppose you had flows located in ``/user/login``, ``/user/registration``, ``/hotels/booking``, and `/flights/booking` directories within ``WEB-INF``, you'd end up with flow ids of ``user/login``, ``user/registration``, ``hotels/booking``, and ``flights/booking``, respectively. 
+
+[[_flow_registry_parent]]
+=== Configuring FlowRegistry hierarchies
+
+Use the `parent` attribute to link two flow registries together in a hierarchy.
+When the child registry is queried, if it cannot find the requested flow it will delegate to its parent. 
+
+In XML: 
+
+[source,xml]
+----
+
+<!-- my-system-config.xml -->
+<webflow:flow-registry id="flowRegistry" parent="sharedFlowRegistry">
+    <webflow:flow-location path="/WEB-INF/flows/booking/booking.xml" />
+</webflow:flow-registry>
+
+<!-- shared-config.xml -->
+<webflow:flow-registry id="sharedFlowRegistry">
+    <!-- Global flows shared by several applications -->
+</webflow:flow-registry>
+----
+
+In Java: 
+
+[source,java]
+----
+
+@Configuration
+public class WebFlowConfig extends AbstractFlowConfiguration {
+
+    @Autowired
+    private SharedConfig sharedConfig;
+
+    @Bean
+    public FlowDefinitionRegistry flowRegistry() {
+        return getFlowDefinitionRegistryBuilder()
+                .setParent(this.sharedConfig.sharedFlowRegistry())
+                .addFlowLocation("/WEB-INF/flows/booking/booking.xml")
+                .build();
+    }
+}
+
+@Configuration
+public class SharedConfig extends AbstractFlowConfiguration {
+
+    @Bean
+    public FlowDefinitionRegistry sharedFlowRegistry() {
+        return getFlowDefinitionRegistryBuilder()
+                .addFlowLocation("/WEB-INF/flows/shared.xml")
+                .build();
+    }
+}
+----
+
+[[_flow_registry_builder_services]]
+=== Configuring custom FlowBuilder services
+
+Use the `flow-builder-services` attribute to customize the services and settings used to build flows in a flow-registry.
+If no flow-builder-services tag is specified, the default service implementations are used.
+When the tag is defined, you only need to reference the services you want to customize. 
+
+In XML:
+
+[source,xml]
+----
+
+<webflow:flow-registry id="flowRegistry" flow-builder-services="flowBuilderServices">
+    <webflow:flow-location path="/WEB-INF/flows/booking/booking.xml" />
+</webflow:flow-registry>
+
+<webflow:flow-builder-services id="flowBuilderServices" />
+----
+
+In Java:
+
+[source,java]
+----
+
+@Bean
+public FlowDefinitionRegistry flowRegistry() {
+	return getFlowDefinitionRegistryBuilder(flowBuilderServices())
+            .addFlowLocation("/WEB-INF/flows/booking/booking.xml")
+            .build();
+}
+
+@Bean
+public FlowBuilderServices flowBuilderServices() {
+    return getFlowBuilderServicesBuilder().build();
+}
+----
+
+The configurable services are the ``conversion-service``, ``expression-parser``, and ``view-factory-creator``.
+These services are configured by referencing custom beans you define. 
+
+For example in XML: 
+
+[source,xml]
+----
+
+<webflow:flow-builder-services id="flowBuilderServices"
+    conversion-service="conversionService"
+    expression-parser="expressionParser"
+    view-factory-creator="viewFactoryCreator" />
+
+<bean id="conversionService" class="..." />
+<bean id="expressionParser" class="..." />
+<bean id="viewFactoryCreator" class="..." />
+----
+
+In Java:
+
+[source,java]
+----
+
+@Bean
+public FlowBuilderServices flowBuilderServices() {
+    return getFlowBuilderServicesBuilder()
+            .setConversionService(conversionService())
+            .setExpressionParser(expressionParser)
+            .setViewFactoryCreator(mvcViewFactoryCreator())
+            .build();
+}
+
+@Bean
+public ConversionService conversionService() {
+    // ...
+}
+
+@Bean
+public ExpressionParser expressionParser() {
+    // ...
+}
+
+@Bean
+public ViewFactoryCreator viewFactoryCreator() {
+    // ...
+}
+----
+
+[[_builder_service_conversion]]
+==== conversion-service
+
+Use the `conversion-service` attribute to customize the `ConversionService` used by the Web Flow system.
+Type conversion is used to convert from one type to another when required during flow execution such as when processing request parameters, invoking actions, and so on.
+Many common object types such as numbers, classes, and enums are supported.
+However you'll probably need to provide your own type conversion and formatting logic for custom data types.
+Please read <<_view_type_conversion>> for important information on how to provide custom type conversion logic. 
+
+[[_builder_service_expression_parser]]
+==== expression-parser
+
+Use the `expression-parser` attribute to customize the `ExpressionParser` used by the Web Flow system.
+The default ExpressionParser uses the Unified EL if available on the classpath, otherwise Spring EL is used. 
+
+[[_builder_service_view_factory_creator]]
+==== view-factory-creator
+
+Use the `view-factory-creator` attribute to customize the `ViewFactoryCreator` used by the Web Flow system.
+The default ViewFactoryCreator produces Spring MVC ViewFactories capable of rendering JSP, Velocity, and Freemarker views. 
+
+The configurable settings are ``development``.
+These settings are global configuration attributes that can be applied during the flow construction process. 
+
+[[_builder_development]]
+==== development
+
+Set this to `true` to switch on flow __development mode__.
+Development mode switches on hot-reloading of flow definition changes, including changes to dependent flow resources such as message bundles. 
+
+[[_flow_executor]]
+== flow-executor options
+
+This section explores flow-executor configuration options. 
+
+[[_flow_executor_execution_listeners]]
+=== Attaching flow execution listeners
+
+Use the `flow-execution-listeners` element to register listeners that observe the lifecycle of flow executions.
+For example in XML: 
+
+[source,xml]
+----
+
+<webflow:flow-execution-listeners>
+    <webflow:listener ref="securityListener"/>
+    <webflow:listener ref="persistenceListener"/>
+</webflow:flow-execution-listeners>
+----
+
+In Java: 
+
+[source,java]
+----
+
+@Bean
+public FlowExecutor flowExecutor() {
+    return getFlowExecutorBuilder(flowRegistry())
+            .addFlowExecutionListener(securityListener())
+            .addFlowExecutionListener(persistenceListener())
+            .build();
+}
+----
+
+You may also configure a listener to observe only certain flows.
+For example in XML: 
+
+[source,xml]
+----
+
+<webflow:listener ref="securityListener" criteria="securedFlow1,securedFlow2"/>
+----
+
+In Java: 
+
+[source,java]
+----
+
+@Bean
+public FlowExecutor flowExecutor() {
+    return getFlowExecutorBuilder(flowRegistry())
+            .addFlowExecutionListener(securityListener(), "securedFlow1,securedFlow2")
+            .build();
+}
+----
+
+[[_tuning_flow_execution_repository]]
+=== Tuning FlowExecution persistence
+
+Use the `flow-execution-repository` element to tune flow execution persistence settings.
+For example in XML: 
+
+[source,xml]
+----
+
+<webflow:flow-executor id="flowExecutor" flow-registry="flowRegistry">
+    <webflow:flow-execution-repository max-executions="5" max-execution-snapshots="30" />
+</webflow:flow-executor>
+----
+
+In Java: 
+
+[source,java]
+----
+
+@Bean
+public FlowExecutor flowExecutor() {
+    return getFlowExecutorBuilder(flowRegistry())
+            .setMaxFlowExecutions(5)
+            .setMaxFlowExecutionSnapshots(30)
+            .build();
+}
+----
+
+[[_repository_max_executions]]
+==== max-executions
+
+Tune the `max-executions` attribute to place a cap on the number of flow executions that can be created per user session.
+When the maximum number of executions is exceeded, the oldest execution is removed. 
+
+[NOTE]
+====
+The `max-executions` attribute is per user session, i.e.
+it works across instances of any flow definition. 
+====
+
+[[_repository_max_snapshots]]
+==== max-execution-snapshots
+
+Tune the `max-execution-snapshots` attribute to place a cap on the number of history snapshots that can be taken per flow execution.
+To disable snapshotting, set this value to 0.
+To enable an unlimited number of snapshots, set this value to -1. 
+
+[NOTE]
+====
+History snapshots enable browser back button support.
+When snapshotting is disabled pressing the browser back button will not work.
+It will result in using an execution key that points to a snapshot that has not be recorded. 
+====
